@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from products.models import Product
 from products.utils import parse_user_sentence
 import json 
+from .models import Messages
 
 # Create your views here.
 @csrf_exempt  # Use with caution, consider using CSRF tokens in production
@@ -35,6 +36,11 @@ def chat(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         user_input = data.get("message", "")
+        if user_input:
+            user_input = user_input.strip()
+            Messages.objects.create(user=request.user, message=user_input)
+        else:
+            return JsonResponse({"error": "Message cannot be empty."}, status=400)
         query = parse_user_sentence(user_input)
         products = Product.objects.all()
         if query["category"]:
